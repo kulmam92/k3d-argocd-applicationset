@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cluster-addons
+  namespace: argocd
+spec:
+  generators:
+    # matrix 'parent' generator
+    - matrix:
+        generators:
+          # git generator, 'child' #1
+          - git:
+              repoURL: https://github.com/kulmam92/k3d-argocd-applicationset.git
+              revision: HEAD
+              directories:
+                - path: applications/cluster-addons/*
+                - path: applications/cluster-addons/akv2k8s
+                  exclude: true
+          # cluster generator, 'child' #2
+          - clusters: {} # Automatically use all clusters defined within Argo CD
+              # selector:
+              #   matchLabels:
+              #     # target only remote clusters
+              #     argocd.argoproj.io/secret-type: cluster
+  template:
+    metadata:
+      name: '{{ printf "{{name}}-{{path.basename}}" }}'
+    spec:
+      source:
+        repoURL: https://github.com/kulmam92/k3d-argocd-applicationset
+        targetRevision: HEAD
+        path: '{{ printf "{{path}}" }}'
+      destination:
+        server: '{{ printf "{{server}}" }}'
+        namespace: '{{ printf "{{path.basename}}" }}'
+      project: cluster-addons
+      syncPolicy:
+        # https://github.com/prometheus-community/helm-charts/issues/1500
+        syncOptions:
+          - CreateNamespace=true
+        #  - Replace=true
+        automated:
+          prune: true
+          selfHeal: true

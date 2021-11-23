@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: argo-cd
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  generators:
+    # cluster generator
+    - clusters: {} # Automatically use all clusters defined within Argo CD
+        # selector:
+        #   matchLabels:
+        #     # target only remote clusters
+        #     argocd.argoproj.io/secret-type: cluster
+  template:
+    metadata:
+      name: argo-cd # '{{ printf "{{name}}" }}-argo-cd'
+    spec:
+      source:
+        repoURL: https://github.com/kulmam92/k3d-argocd-applicationset
+        targetRevision: HEAD
+        path: charts/argo-cd/
+      destination:
+        server: '{{ printf "{{server}}" }}'
+        namespace: argocd
+      project: argo
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
