@@ -30,3 +30,6 @@ delete-argocd-helm:
 
 get-argocd-admin-cerd:
 	kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+
+port-forward-argocd:
+	kubectl port-forward svc/argo-cd-argocd-server 8080:443 -n argocd
